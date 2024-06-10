@@ -1,6 +1,9 @@
+from io import BytesIO
 from fastapi import HTTPException
+from fastapi.responses import StreamingResponse
 import pandas as pd
 from Models.client import Cliente
+import matplotlib.pyplot as plt
 
 def leer_clientes():
     df = pd.read_csv("clientes_segmentados.csv")
@@ -31,3 +34,32 @@ def eliminar_cliente(cliente_id: str):
     df = pd.read_csv("clientes_segmentados.csv")
     df = df[df['id'] != cliente_id]
     df.to_csv("clientes_segmentados.csv", index=False)
+
+db = pd.read_csv("clientes_segmentados.csv")
+oro_customers: list = db[db['categoria'] == 'Oro']['nombre'].tolist()
+plata_customers: list = db[db['categoria'] == 'Plata']['nombre'].tolist()
+bronce_customers: list = db[db['categoria'] == 'Bronce']['nombre'].tolist()
+print(oro_customers)
+
+def plot_customers_rfm() -> StreamingResponse:
+    """
+    Genera un gráfico de barras mostrando la distribución de clientes según su clase RFM.
+
+    Returns:
+        StreamingResponse: Imagen del gráfico en formato PNG.
+    """
+
+    classes = ["oro", "plata", "bronce"]
+    counts = [len(oro_customers), len(plata_customers), len(bronce_customers)]
+
+    fig, ax = plt.subplots()
+    ax.bar(classes, counts, color=['gold', 'silver', 'brown'])
+    ax.set_xlabel('RFM Class')
+    ax.set_ylabel('Number of Customers')
+    ax.set_title('RFM Segmentation of Customers')
+
+    buf = BytesIO()
+    plt.savefig(buf, format='png')
+    buf.seek(0)
+    plt.close(fig)
+    return StreamingResponse(buf, media_type="image/png")

@@ -2,7 +2,7 @@ from datetime import timedelta
 from typing import Annotated
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordRequestForm
-from Controllers.client_controller import leer_clientes, obtener_cliente, crear_cliente, actualizar_cliente, eliminar_cliente
+from Controllers.client_controller import leer_clientes, obtener_cliente, crear_cliente, actualizar_cliente, eliminar_cliente, plot_customers_rfm
 from Models.client import Cliente
 from Models.authentication_models import Token
 from Controllers.authentication_controller import oauth2_scheme, fake_users_db, authenticate_user, create_access_token, ACCESS_TOKEN_EXPIRE_MINUTES
@@ -31,6 +31,16 @@ def actualizar_cliente_por_id(cliente_id: str, cliente: Cliente, token: Annotate
 def eliminar_cliente_por_id(cliente_id: str, token: Annotated[str, Depends(oauth2_scheme)]):
     eliminar_cliente(cliente_id)
     return {"mensaje": "Cliente eliminado"}
+
+@router.get("/rfm/plot")
+def plot_customers_rfm_route(token: Annotated[str, Depends(oauth2_scheme)]):
+    """
+    Genera y muestra un gráfico de los clientes según el modelo RFM.
+
+    Returns:
+        None
+    """
+    return plot_customers_rfm()
 
 @router.post("/token")
 async def login_for_access_token(
